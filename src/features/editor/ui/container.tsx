@@ -8,7 +8,7 @@ import { Table } from "./table";
 
 const styles: CSSProperties = {
   width: "100%",
-  height: "100vh",
+  height: "calc(100vh - 72px)",
   position: "relative",
 };
 
@@ -16,8 +16,32 @@ export interface ContainerState {
   boxes: { [key: string]: { top: number; left: number; title: string } };
 }
 
+const initialValue: DragItem[] = [
+  {
+    id: "1",
+    top: 252,
+    left: 553,
+    type:DragItemType.Table,
+    tableType: TableType.Circle,
+  },
+  {
+    id: "2",
+    top: 76,
+    left: 212,
+    type:DragItemType.Table,
+    tableType: TableType.Rectangle,
+  },
+  {
+    id: "3",
+    top: 451,
+    left: 299,
+    type:DragItemType.Table,
+    tableType: TableType.Circle,
+  },
+];
+
 export const Container = () => {
-  const [boxes, setBoxes] = useLocalStorage<DragItem[]>("map");
+  const [boxes, setBoxes] = useLocalStorage<DragItem[]>("map", initialValue);
 
   const moveBox = useCallback(
     (id: string, left: number, top: number) => {

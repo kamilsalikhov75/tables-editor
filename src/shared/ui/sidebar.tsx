@@ -4,7 +4,7 @@ import { Button } from '@/shared/ui/button'
 import { useState } from 'react'
 
 export const Sidebar=()=> {
-  const [open , setOpen] = useState(true) 
+  const [open , setOpen] = useState(false) 
   return (
     <Sheet open={open} modal={false}>
       <SheetTrigger asChild>
