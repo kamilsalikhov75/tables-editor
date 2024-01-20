@@ -7,9 +7,10 @@ import { DragItem, DragItemType, TableType } from "../types/types";
 import { Table } from "./table";
 
 const styles: CSSProperties = {
-  width: "100%",
+  width: "100vw",
   height: "calc(100vh - 72px)",
   position: "relative",
+  overflow:"scroll"
 };
 
 export interface ContainerState {
