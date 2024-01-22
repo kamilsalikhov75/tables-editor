@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { XYCoord } from "react-dnd";
 import { useDrop } from "react-dnd";
 import { useLocalStorage } from "@/shared/lib/hooks/use-local-storage";
@@ -48,6 +48,14 @@ export const Container = () => {
   const [y, setY] = useState(0);
   const throtlledX = useThrottle(x, 10);
   const throtlledY = useThrottle(y, 10);
+  const mc = useMemo(() => {
+    if (wrapperRef.current) {
+      return new Hammer.Manager(wrapperRef.current);
+    }
+  }, [wrapperRef.current]);
+  const Pan = useMemo(() => {
+    return new Hammer.Pan();
+  }, []);
 
   const moveBox = useCallback(
     (id: string, left: number, top: number) => {
@@ -83,9 +91,7 @@ export const Container = () => {
   }, [wrapperRef]);
 
   useEffect(() => {
-    if (wrapperRef.current) {
-      const mc = new Hammer.Manager(wrapperRef.current);
-      const Pan = new Hammer.Pan();
+    if (mc && !mc?.get("pan")) {
       mc.add(Pan);
       mc.on("panmove", (e) => {
         const left = e.deltaX + x;
@@ -93,9 +99,8 @@ export const Container = () => {
         setX(left);
         setY(top);
       });
-      // mc.destroy();
     }
-  }, [wrapperRef, x, y]);
+  }, [x, y, mc, Pan, wrapperRef]);
 
   return (
     <div
