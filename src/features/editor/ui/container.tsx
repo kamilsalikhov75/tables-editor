@@ -1,17 +1,12 @@
-import type { CSSProperties } from "react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { XYCoord } from "react-dnd";
 import { useDrop } from "react-dnd";
 import { useLocalStorage } from "@/shared/lib/hooks/use-local-storage";
 import { DragItem, DragItemType, TableType } from "../types/types";
 import { Table } from "./table";
-
-const styles: CSSProperties = {
-  width: "100vw",
-  height: "calc(100vh - 72px)",
-  position: "relative",
-  overflow:"scroll"
-};
+import clsx from "clsx";
+import Hammer from "hammerjs";
+import { useThrottle } from "@/shared/lib/hooks/use-throtlle";
 
 export interface ContainerState {
   boxes: { [key: string]: { top: number; left: number; title: string } };
@@ -22,32 +17,40 @@ const initialValue: DragItem[] = [
     id: "1",
     top: 252,
     left: 553,
-    type:DragItemType.Table,
+    type: DragItemType.Table,
     tableType: TableType.Circle,
   },
   {
     id: "2",
     top: 76,
     left: 212,
-    type:DragItemType.Table,
+    type: DragItemType.Table,
     tableType: TableType.Rectangle,
   },
   {
     id: "3",
     top: 451,
     left: 299,
-    type:DragItemType.Table,
+    type: DragItemType.Table,
     tableType: TableType.Circle,
   },
 ];
 
+const step = 10;
+
 export const Container = () => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number>();
+  const [height, setHeight] = useState<number>();
   const [boxes, setBoxes] = useLocalStorage<DragItem[]>("map", initialValue);
+  const [scale, setScale] = useState(1);
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  const throtlledX = useThrottle(x, 10);
+  const throtlledY = useThrottle(y, 10);
 
   const moveBox = useCallback(
     (id: string, left: number, top: number) => {
-      console.log(id);
-
       setBoxes(
         boxes.map((box) => {
           if (box.id === id) {
@@ -74,9 +77,90 @@ export const Container = () => {
     [moveBox]
   );
 
+  useEffect(() => {
+    setWidth(wrapperRef.current?.clientWidth);
+    setHeight(wrapperRef.current?.clientHeight);
+  }, [wrapperRef]);
+
+  useEffect(() => {
+    if (wrapperRef.current) {
+      const mc = new Hammer.Manager(wrapperRef.current);
+      const Pan = new Hammer.Pan();
+      mc.add(Pan);
+      mc.on("panmove", (e) => {
+        const left = e.deltaX + x;
+        const top = e.deltaY + y;
+        setX(left);
+        setY(top);
+      });
+      // mc.destroy();
+    }
+  }, [wrapperRef, x, y]);
+
   return (
-    <div style={{ display: "flex" }}>
-      <div ref={drop} style={styles}>
+    <div
+      ref={wrapperRef}
+      onWheel={(e) => {
+        if (e.deltaY > 0) {
+          return setScale((prev) => prev + 0.1);
+        }
+        if (scale > 0.1) {
+          setScale((prev) => prev - 0.1);
+        }
+      }}
+      className={clsx("flex relative overflow-clip")}
+    >
+      {width && height && (
+        <div
+          className="absolute"
+          // style={{ transform: `translate(${bgX}px, ${bgY}px)` }}
+        >
+          <div className="grid grid-flow-col gap-[9px] absolute">
+            {Array(Math.floor(width / step) + 100)
+              .fill(0)
+              .map((_, index) => {
+                return (
+                  <span
+                    className={clsx(
+                      "block w-[1px]",
+                      { "bg-black": index % 5 === 0 },
+                      { "bg-gray-300 ": index % 5 !== 0 }
+                    )}
+                    style={{ height: height + 100 * step }}
+                    key={index}
+                  />
+                );
+              })}
+          </div>
+          <div className="grid grid-flow-row gap-[9px] absolute">
+            {Array(Math.floor(height / step) + 100)
+              .fill(0)
+              .map((_, index) => {
+                return (
+                  <span
+                    className={clsx(
+                      "block w-full h-[1px] bg-black",
+                      { "bg-black": index % 5 === 0 },
+                      { "bg-gray-300 ": index % 5 !== 0 }
+                    )}
+                    style={{ width: width + 100 * step }}
+                    key={index}
+                  />
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      <div
+        id="items"
+        className="w-screen h-[calc(100vh-72px)] relative"
+        ref={drop}
+        // style={{ transform: `scale(${scale})` }}
+        style={{
+          transform: `translate(${throtlledX}px, ${throtlledY}px) scale(${scale})`,
+        }}
+      >
         {boxes.map((box) => {
           const { left, top, tableType } = box;
           return (

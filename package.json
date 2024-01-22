@@ -16,6 +16,8 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "hammerjs": "^2.0.8",
+    "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.312.0",
     "react": "^18.2.0",
     "react-dnd": "^16.0.1",
@@ -25,6 +27,8 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/hammerjs": "^2.0.45",
+    "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^20.11.5",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
